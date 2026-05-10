@@ -1,0 +1,109 @@
+<!-- alerts.component.html -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 class="fw-semibold mb-1 d-flex align-items-center gap-2">
+      <i class="bi bi-bell-fill text-warning"></i> Stock Alerts
+    </h5>
+    <small class="text-muted">{{ alerts.length }} products need attention</small>
+  </div>
+  <button class="btn btn-sm btn-outline-secondary" (click)="load()">
+    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+  </button>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading" class="text-center py-5">
+  <div class="spinner-border text-warning"></div>
+  <p class="text-muted mt-3 small">Checking stock levels...</p>
+</div>
+
+<!-- Empty state -->
+<div *ngIf="!isLoading && alerts.length === 0" class="card border-0 shadow-sm text-center py-5">
+  <div class="card-body">
+    <i class="bi bi-check-circle-fill text-success fs-1 mb-3 d-block"></i>
+    <h6 class="fw-semibold">All Good!</h6>
+    <p class="text-muted small">All products have sufficient stock levels.</p>
+  </div>
+</div>
+
+<!-- Alert cards -->
+<div class="row g-3" *ngIf="!isLoading">
+  <div class="col-12" *ngFor="let alert of alerts">
+    <div class="card border-0 shadow-sm"
+         [class.border-start]="true"
+         [style.border-left-color]="alert.severity === 'Critical' ? '#dc3545' : alert.severity === 'High' ? '#ffc107' : '#0dcaf0'"
+         style="border-left-width:4px !important">
+      <div class="card-body p-4">
+        <div class="row align-items-start g-3">
+
+          <!-- Alert Info -->
+          <div class="col-md-5">
+            <div class="d-flex align-items-start gap-3">
+              <i [class]="'bi fs-4 ' + getSeverityIcon(alert.severity)"></i>
+              <div>
+                <div class="fw-semibold">{{ alert.productName }}</div>
+                <code class="text-muted small">{{ alert.sku }}</code>
+                <div class="mt-2">
+                  <span [class]="'badge ' + getSeverityBadge(alert.severity) + ' rounded-pill me-2'">
+                    {{ alert.severity }}
+                  </span>
+                  <span class="badge bg-secondary bg-opacity-15 text-secondary rounded-pill">
+                    {{ alert.quantityInStock }} / {{ alert.lowStockThreshold }} units
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock bar -->
+          <div class="col-md-4 d-flex align-items-center">
+            <div class="w-100">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted">Stock Level</small>
+                <small class="fw-semibold">
+                  {{ alert.quantityInStock }} / {{ alert.lowStockThreshold }} min
+                </small>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar"
+                     [class]="alert.severity === 'Critical' ? 'bg-danger' : alert.severity === 'High' ? 'bg-warning' : 'bg-info'"
+                     [style.width]="(alert.quantityInStock / alert.lowStockThreshold * 100) + '%'">
+                </div>
+              </div>
+              <small class="text-muted mt-1 d-block">
+                {{ alert.quantityInStock <= 0 ? 'OUT OF STOCK' : 'Below minimum threshold' }}
+              </small>
+            </div>
+          </div>
+
+          <!-- AI Suggestion button -->
+          <div class="col-md-3 d-flex align-items-start justify-content-md-end">
+            <button class="btn btn-sm btn-outline-primary rounded-3"
+                    (click)="getAiSuggestion(alert.productId)"
+                    [disabled]="loadingAI[alert.productId]">
+              <span *ngIf="loadingAI[alert.productId]" class="spinner-border spinner-border-sm me-1"></span>
+              <i *ngIf="!loadingAI[alert.productId]" class="bi bi-robot me-1"></i>
+              {{ loadingAI[alert.productId] ? 'Analyzing...' : 'AI Suggestion' }}
+            </button>
+          </div>
+
+          <!-- AI Suggestion result -->
+          <div class="col-12" *ngIf="suggestions[alert.productId]">
+            <div class="rounded-3 p-3 mt-1" style="background:#f0f4ff;border:1px solid #dde3ff">
+              <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-robot text-primary mt-1 flex-shrink-0"></i>
+                <div>
+                  <div class="fw-semibold text-primary small mb-1">AI Restock Recommendation</div>
+                  <p class="mb-0 text-dark" style="font-size:13px;line-height:1.6;white-space:pre-line">
+                    {{ suggestions[alert.productId] }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

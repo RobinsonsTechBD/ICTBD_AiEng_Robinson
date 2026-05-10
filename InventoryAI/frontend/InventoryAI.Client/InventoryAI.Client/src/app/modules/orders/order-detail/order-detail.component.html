@@ -1,0 +1,69 @@
+<!-- order-detail.component.html -->
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a routerLink="/orders" class="btn btn-sm btn-outline-secondary rounded-2"><i class="bi bi-arrow-left"></i></a>
+  <h5 class="fw-semibold mb-0">Order Detail</h5>
+</div>
+
+<div *ngIf="isLoading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+<div class="row g-4" *ngIf="order && !isLoading">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between py-3 px-4">
+        <h6 class="mb-0 fw-semibold">{{ order.orderNumber }}</h6>
+        <span [class]="'badge ' + getStatusBadge(order.status) + ' rounded-pill'">{{ order.status }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="px-4 fw-semibold small">Product</th>
+              <th class="fw-semibold small">SKU</th>
+              <th class="fw-semibold small">Qty</th>
+              <th class="fw-semibold small">Unit Price</th>
+              <th class="fw-semibold small pe-4">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of order.orderItems">
+              <td class="px-4 fw-semibold" style="font-size:13px">{{ item.product?.productName }}</td>
+              <td><code style="font-size:12px">{{ item.product?.sku }}</code></td>
+              <td>{{ item.quantity }}</td>
+              <td>৳{{ item.unitPrice | number:'1.2-2' }}</td>
+              <td class="pe-4 fw-semibold">৳{{ item.quantity * item.unitPrice | number:'1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3">Order Summary</h6>
+        <div class="d-flex justify-content-between mb-2 small">
+          <span class="text-muted">Customer</span>
+          <span class="fw-semibold">{{ order.customerName }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2 small">
+          <span class="text-muted">Phone</span>
+          <span>{{ order.customerPhone || '—' }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2 small">
+          <span class="text-muted">Date</span>
+          <span>{{ order.orderDate | date:'MMM d, y HH:mm' }}</span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between mb-2 small">
+          <span class="text-muted">Discount</span>
+          <span class="text-danger">- ৳{{ order.discount | number:'1.0-0' }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-2 border-top mt-2">
+          <span class="fw-bold">Total</span>
+          <span class="fw-bold text-success fs-5">৳{{ order.totalAmount | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

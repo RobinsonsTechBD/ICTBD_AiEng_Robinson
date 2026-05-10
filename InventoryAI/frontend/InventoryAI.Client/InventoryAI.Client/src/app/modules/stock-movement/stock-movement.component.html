@@ -1,0 +1,160 @@
+<!-- stock-movement.component.html -->
+<div class="mb-4">
+  <h5 class="fw-semibold mb-1">Stock Movement</h5>
+  <small class="text-muted">Manually adjust inventory levels — Stock In, Out, or Adjust</small>
+</div>
+
+<div class="row g-4">
+  <!-- Left: Form -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-left-right text-primary"></i> Stock Adjustment Form
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <div *ngIf="success" class="alert alert-success rounded-3 py-2 px-3 mb-4 d-flex align-items-center gap-2">
+          <i class="bi bi-check-circle-fill"></i>
+          <span class="small fw-semibold">Stock updated successfully!</span>
+        </div>
+        <div *ngIf="error" class="alert alert-danger rounded-3 py-2 px-3 mb-4 small">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Select Product <span class="text-danger">*</span></label>
+          <select class="form-select" [(ngModel)]="productId" (change)="onProductChange()">
+            <option value="">-- Select a product --</option>
+            <option *ngFor="let p of products" [value]="p.productId">
+              {{ p.productName }} | SKU: {{ p.sku }} | Stock: {{ p.quantityInStock }}
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="selectedProduct" class="rounded-3 p-3 mb-4" style="background:#f0f9ff;border:1px solid #bae6fd">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold" style="font-size:13px">{{ selectedProduct.productName }}</div>
+              <small class="text-muted">Min threshold: {{ selectedProduct.lowStockThreshold }} units</small>
+            </div>
+            <div class="text-end">
+              <div class="text-muted small">Current Stock</div>
+              <div class="fw-bold fs-5 text-primary">{{ selectedProduct.quantityInStock }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Movement Type</label>
+          <div class="row g-2">
+            <div class="col-4">
+              <button type="button" class="btn w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3"
+                      [class]="movType === 'IN' ? 'btn-success' : 'btn-outline-success'" (click)="movType='IN'">
+                <i class="bi bi-plus-circle fs-5"></i>
+                <span style="font-size:12px;font-weight:600">Stock In</span>
+              </button>
+            </div>
+            <div class="col-4">
+              <button type="button" class="btn w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3"
+                      [class]="movType === 'OUT' ? 'btn-danger' : 'btn-outline-danger'" (click)="movType='OUT'">
+                <i class="bi bi-dash-circle fs-5"></i>
+                <span style="font-size:12px;font-weight:600">Stock Out</span>
+              </button>
+            </div>
+            <div class="col-4">
+              <button type="button" class="btn w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3"
+                      [class]="movType === 'ADJUST' ? 'btn-warning text-dark' : 'btn-outline-warning'" (click)="movType='ADJUST'">
+                <i class="bi bi-pencil fs-5"></i>
+                <span style="font-size:12px;font-weight:600">Adjust</span>
+              </button>
+            </div>
+          </div>
+          <small class="text-muted mt-2 d-block">
+            <span *ngIf="movType==='IN'">Add units to current stock</span>
+            <span *ngIf="movType==='OUT'">Remove units from current stock</span>
+            <span *ngIf="movType==='ADJUST'">Set stock to exact quantity</span>
+          </small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">
+            {{ movType === 'ADJUST' ? 'New Stock Quantity' : 'Quantity' }} <span class="text-danger">*</span>
+          </label>
+          <input class="form-control form-control-lg" type="number" min="1" [(ngModel)]="qty" placeholder="Enter quantity">
+        </div>
+
+        <div *ngIf="selectedProduct && qty > 0" class="d-flex justify-content-between align-items-center rounded-3 p-3 mb-3" style="background:#f8f9fa">
+          <span class="text-muted small">After adjustment:</span>
+          <span class="fs-5 fw-bold" [class]="getNewStockClass()">{{ getNewStock() }} units</span>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Notes (optional)</label>
+          <input class="form-control" type="text" placeholder="e.g. Received from supplier, damaged goods..." [(ngModel)]="notes">
+        </div>
+
+        <button class="btn btn-primary w-100 py-2 fw-semibold" (click)="submit()" [disabled]="!productId || isSaving">
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!isSaving" class="bi bi-check-circle me-2"></i>
+          {{ isSaving ? 'Updating...' : 'Apply Stock Change' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: History + Guide -->
+  <div class="col-lg-6 d-flex flex-column gap-4">
+    <div class="card border-0 shadow-sm" *ngIf="recentMovements.length > 0">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-primary"></i> Recent Changes (This Session)
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div *ngFor="let m of recentMovements" class="d-flex align-items-center gap-3 px-4 py-3 border-bottom">
+          <span [class]="'badge ' + getMovBadge(m.movementType) + ' rounded-pill'">{{ m.movementType }}</span>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:13px">{{ m.productName }}</div>
+            <small class="text-muted">{{ m.notes || 'No notes' }}</small>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold">{{ m.movementType === 'IN' ? '+' : m.movementType === 'OUT' ? '-' : '=' }}{{ m.quantity }}</div>
+            <small class="text-muted">{{ m.createdAt | date:'HH:mm' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-primary"></i> Movement Types Guide
+        </h6>
+      </div>
+      <div class="card-body p-4 d-flex flex-column gap-3">
+        <div class="d-flex gap-3 align-items-start">
+          <div class="rounded-3 bg-success bg-opacity-10 p-2 flex-shrink-0"><i class="bi bi-plus-circle text-success fs-5"></i></div>
+          <div>
+            <div class="fw-semibold" style="font-size:13px">Stock In</div>
+            <small class="text-muted">Receiving goods from supplier, purchase orders, or returns to inventory.</small>
+          </div>
+        </div>
+        <div class="d-flex gap-3 align-items-start">
+          <div class="rounded-3 bg-danger bg-opacity-10 p-2 flex-shrink-0"><i class="bi bi-dash-circle text-danger fs-5"></i></div>
+          <div>
+            <div class="fw-semibold" style="font-size:13px">Stock Out</div>
+            <small class="text-muted">Manual removals — damaged goods, internal use, samples, or write-offs.</small>
+          </div>
+        </div>
+        <div class="d-flex gap-3 align-items-start">
+          <div class="rounded-3 bg-warning bg-opacity-10 p-2 flex-shrink-0"><i class="bi bi-pencil text-warning fs-5"></i></div>
+          <div>
+            <div class="fw-semibold" style="font-size:13px">Adjust</div>
+            <small class="text-muted">After physical stock count — correct system quantity to match actual shelf count.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

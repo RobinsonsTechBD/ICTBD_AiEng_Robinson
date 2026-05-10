@@ -1,0 +1,185 @@
+<!-- ai-chat.component.html -->
+<div class="row g-4">
+
+  <!-- Chat Area -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm h-100" style="min-height:600px;display:flex;flex-direction:column">
+      <!-- Header -->
+      <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width:40px;height:40px">
+            <i class="bi bi-robot fs-5"></i>
+          </div>
+          <div>
+            <div class="fw-semibold">AI Inventory Assistant</div>
+            <div class="d-flex align-items-center gap-1">
+              <span class="badge bg-success rounded-pill" style="font-size:10px;width:8px;height:8px;padding:0"></span>
+              <small class="text-success" style="font-size:11px">Powered by Ollama + RAG</small>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="clearChat()" title="New Chat">
+          <i class="bi bi-plus-circle me-1"></i> New Chat
+        </button>
+      </div>
+
+      <!-- Messages -->
+      <div #chatBody class="flex-grow-1 overflow-auto p-4" style="max-height:480px;background:#fafafa">
+
+        <!-- Starting state -->
+        <div *ngIf="isStarting" class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" style="width:2rem;height:2rem"></div>
+          <p class="text-muted small">Connecting to AI service...</p>
+        </div>
+
+        <!-- Messages -->
+        <div *ngFor="let msg of messages" class="mb-4">
+
+          <!-- User message -->
+          <div *ngIf="msg.role === 'user'" class="d-flex justify-content-end">
+            <div class="d-flex flex-column align-items-end gap-1">
+              <div class="bg-primary text-white rounded-3 px-4 py-2" style="max-width:80%;font-size:14px;border-radius:18px 18px 4px 18px !important">
+                {{ msg.content }}
+              </div>
+              <small class="text-muted" style="font-size:10px">{{ msg.time | date:'HH:mm' }}</small>
+            </div>
+          </div>
+
+          <!-- Assistant message -->
+          <div *ngIf="msg.role === 'assistant'" class="d-flex gap-3">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 mt-1"
+                 style="width:32px;height:32px;font-size:12px">
+              <i class="bi bi-robot"></i>
+            </div>
+            <div class="d-flex flex-column gap-1" style="max-width:85%">
+              <div class="bg-white border rounded-3 px-4 py-3 shadow-sm" style="font-size:14px;line-height:1.6;border-radius:4px 18px 18px 18px !important;white-space:pre-line">
+                {{ msg.content }}
+              </div>
+              <small class="text-muted" style="font-size:10px">{{ msg.time | date:'HH:mm' }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div *ngIf="isLoading" class="d-flex gap-3 mb-3">
+          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;font-size:12px">
+            <i class="bi bi-robot"></i>
+          </div>
+          <div class="bg-white border rounded-3 px-4 py-3 shadow-sm d-flex align-items-center gap-1">
+            <span class="typing-dot"></span>
+            <span class="typing-dot" style="animation-delay:.2s"></span>
+            <span class="typing-dot" style="animation-delay:.4s"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="card-footer bg-white border-top p-3">
+        <div class="input-group">
+          <textarea
+            class="form-control border-0 bg-light rounded-3 resize-none"
+            rows="2"
+            placeholder="Ask about inventory, stock levels, sales trends..."
+            [(ngModel)]="userInput"
+            (keydown)="onKeyDown($event)"
+            [disabled]="isLoading || isStarting"
+            style="font-size:14px">
+          </textarea>
+          <button
+            class="btn btn-primary ms-2 rounded-3 px-3"
+            (click)="sendMessage()"
+            [disabled]="isLoading || !userInput.trim() || isStarting">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+        <small class="text-muted mt-1 d-block" style="font-size:11px">
+          Press Enter to send · Shift+Enter for new line
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Questions + Info -->
+  <div class="col-lg-4 d-flex flex-column gap-4">
+
+    <!-- Quick Questions -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-lightning-charge text-warning"></i>
+          Quick Questions
+        </h6>
+      </div>
+      <div class="card-body p-3">
+        <button
+          *ngFor="let q of quickQuestions"
+          class="btn btn-light btn-sm w-100 text-start mb-2 rounded-3"
+          style="font-size:13px;line-height:1.4"
+          (click)="sendMessage(q)"
+          [disabled]="isLoading || isStarting">
+          {{ q }}
+        </button>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-primary"></i>
+          How AI Works Here
+        </h6>
+      </div>
+      <div class="card-body px-4 py-3">
+        <div class="d-flex flex-column gap-3">
+          <div class="d-flex gap-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:32px;height:32px;font-size:13px">1</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13px">RAG Retrieval</div>
+              <small class="text-muted">Live inventory data is fetched from your SQL database</small>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:32px;height:32px;font-size:13px">2</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13px">Context Injection</div>
+              <small class="text-muted">Current stock data is injected into the AI prompt</small>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:32px;height:32px;font-size:13px">3</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13px">Local LLM (Ollama)</div>
+              <small class="text-muted">qwen3:0.6b answers using your real inventory data</small>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:32px;height:32px;font-size:13px">4</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13px">100% Private</div>
+              <small class="text-muted">All AI runs locally — no data sent to the cloud</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.typing-dot {
+  width: 8px; height: 8px;
+  background: #6c757d; border-radius: 50%;
+  animation: typing 1s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes typing {
+  0%, 100% { transform: translateY(0); opacity: .5; }
+  50%       { transform: translateY(-4px); opacity: 1; }
+}
+</style>

@@ -1,0 +1,54 @@
+<!-- stock-movement.component.html -->
+<h5 class="fw-semibold mb-4">Stock Adjustment</h5>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-left-right text-primary"></i> Manual Stock Update
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <div *ngIf="success" class="alert alert-success py-2 px-3 small rounded-3 mb-3">
+          <i class="bi bi-check-circle me-2"></i>Stock updated successfully!
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Product</label>
+          <select class="form-select" [(ngModel)]="productId">
+            <option value="">-- Select Product --</option>
+            <option *ngFor="let p of products" [value]="p.productId">
+              {{ p.productName }} (Current: {{ p.quantityInStock }})
+            </option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Movement Type</label>
+          <div class="btn-group w-100">
+            <button class="btn" [class]="movType === 'IN' ? 'btn-success' : 'btn-outline-success'" (click)="movType='IN'">
+              <i class="bi bi-plus-circle me-1"></i> Stock In
+            </button>
+            <button class="btn" [class]="movType === 'OUT' ? 'btn-danger' : 'btn-outline-danger'" (click)="movType='OUT'">
+              <i class="bi bi-dash-circle me-1"></i> Stock Out
+            </button>
+            <button class="btn" [class]="movType === 'ADJUST' ? 'btn-warning text-dark' : 'btn-outline-warning'" (click)="movType='ADJUST'">
+              <i class="bi bi-pencil me-1"></i> Adjust
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Quantity</label>
+          <input class="form-control" type="number" min="1" [(ngModel)]="qty">
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">Notes (optional)</label>
+          <input class="form-control" type="text" placeholder="Reason for adjustment..." [(ngModel)]="notes">
+        </div>
+        <button class="btn btn-primary w-100 py-2" (click)="submit()" [disabled]="!productId || isSaving">
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+          Apply Stock Change
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

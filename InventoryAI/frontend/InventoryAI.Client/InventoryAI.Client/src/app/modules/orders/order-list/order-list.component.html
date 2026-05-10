@@ -1,0 +1,78 @@
+<!-- order-list.component.html -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 class="fw-semibold mb-1">Orders</h5>
+    <small class="text-muted">{{ filtered.length }} orders</small>
+  </div>
+  <a routerLink="/orders/new" class="btn btn-primary d-flex align-items-center gap-2">
+    <i class="bi bi-plus-lg"></i> New Order
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body py-3 px-4">
+    <div class="input-group" style="max-width:400px">
+      <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+      <input class="form-control border-0 bg-light" type="text" placeholder="Search by order # or customer..."
+             [(ngModel)]="searchTerm" (input)="search()">
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="px-4 fw-semibold" style="font-size:12px">Order #</th>
+          <th class="fw-semibold" style="font-size:12px">Customer</th>
+          <th class="fw-semibold" style="font-size:12px">Date</th>
+          <th class="fw-semibold" style="font-size:12px">Items</th>
+          <th class="fw-semibold" style="font-size:12px">Total</th>
+          <th class="fw-semibold" style="font-size:12px">Status</th>
+          <th class="fw-semibold text-end pe-4" style="font-size:12px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="isLoading">
+          <td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td>
+        </tr>
+        <tr *ngIf="!isLoading && filtered.length === 0">
+          <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-cart-x fs-3 d-block mb-2"></i>No orders found
+          </td>
+        </tr>
+        <tr *ngFor="let o of filtered">
+          <td class="px-4"><code style="font-size:12px">{{ o.orderNumber }}</code></td>
+          <td style="font-size:13px">
+            <div class="fw-semibold">{{ o.customerName }}</div>
+            <small class="text-muted">{{ o.customerPhone }}</small>
+          </td>
+          <td style="font-size:13px">{{ o.orderDate | date:'MMM d, y HH:mm' }}</td>
+          <td>
+            <span class="badge bg-secondary bg-opacity-15 text-secondary rounded-pill">
+              {{ o.orderItems?.length || 0 }} items
+            </span>
+          </td>
+          <td class="fw-bold text-success" style="font-size:13px">৳{{ o.totalAmount | number:'1.0-0' }}</td>
+          <td>
+            <select class="form-select form-select-sm rounded-2 border-0 bg-light"
+                    style="width:120px;font-size:12px"
+                    [value]="o.status"
+                    (change)="updateStatus(o.orderId, $any($event.target).value)">
+              <option>Pending</option>
+              <option>Processing</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </td>
+          <td class="pe-4">
+            <a [routerLink]="['/orders', o.orderId]" class="btn btn-sm btn-outline-primary rounded-2">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

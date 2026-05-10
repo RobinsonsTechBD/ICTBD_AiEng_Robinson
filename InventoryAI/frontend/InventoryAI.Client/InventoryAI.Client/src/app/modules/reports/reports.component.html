@@ -1,0 +1,175 @@
+<!-- reports.component.html -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h5 class="fw-semibold mb-1">Reports & Analytics</h5>
+    <small class="text-muted">Inventory performance and sales insights</small>
+  </div>
+  <button class="btn btn-primary d-flex align-items-center gap-2"
+          (click)="generateAiInsight()" [disabled]="isLoadingAI">
+    <span *ngIf="isLoadingAI" class="spinner-border spinner-border-sm"></span>
+    <i *ngIf="!isLoadingAI" class="bi bi-stars"></i>
+    {{ isLoadingAI ? 'Analyzing...' : 'AI Insight' }}
+  </button>
+</div>
+
+<!-- AI Insight -->
+<div *ngIf="aiInsight || isLoadingAI" class="card border-0 shadow-sm mb-4"
+     style="background:linear-gradient(135deg,#667eea15,#764ba215)">
+  <div class="card-body px-4 py-3">
+    <div class="d-flex align-items-start gap-3">
+      <div class="rounded-3 bg-primary d-flex align-items-center justify-content-center text-white flex-shrink-0"
+           style="width:40px;height:40px"><i class="bi bi-robot"></i></div>
+      <div>
+        <div class="fw-semibold mb-1">AI Analysis</div>
+        <div *ngIf="isLoadingAI" class="text-muted small">
+          <span class="spinner-border spinner-border-sm me-2"></span>Analyzing your inventory data...
+        </div>
+        <p *ngIf="aiInsight" class="mb-0" style="font-size:14px;line-height:1.7;white-space:pre-line">{{ aiInsight }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Cards Row -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-day text-primary"></i> Today
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <div *ngIf="dailyData">
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Orders</span>
+            <span class="fw-bold">{{ dailyData.totalOrders }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Revenue</span>
+            <span class="fw-bold text-success">৳{{ dailyData.totalRevenue | number:'1.0-0' }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted small">Units Sold</span>
+            <span class="fw-bold">{{ dailyData.totalUnits }}</span>
+          </div>
+        </div>
+        <div *ngIf="!dailyData" class="text-center text-muted small py-2">No data today</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-week text-success"></i> This Week
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <div *ngIf="weeklyData">
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Orders</span>
+            <span class="fw-bold">{{ weeklyData.totalOrders }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Revenue</span>
+            <span class="fw-bold text-success">৳{{ weeklyData.totalRevenue | number:'1.0-0' }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted small">Avg. Order</span>
+            <span class="fw-bold">৳{{ weeklyData.averageOrder | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-month text-warning"></i> Monthly
+        </h6>
+        <div class="d-flex gap-1">
+          <select class="form-select form-select-sm" style="width:90px" [(ngModel)]="selectedMonth" (change)="loadMonthly()">
+            <option *ngFor="let m of months" [value]="m.value">{{ m.label | slice:0:3 }}</option>
+          </select>
+          <input class="form-control form-control-sm" type="number" style="width:75px"
+                 [(ngModel)]="selectedYear" (change)="loadMonthly()">
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div *ngIf="monthlyData">
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Orders</span>
+            <span class="fw-bold">{{ monthlyData.totalOrders }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted small">Revenue</span>
+            <span class="fw-bold text-success">৳{{ monthlyData.totalRevenue | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Section -->
+<div class="row g-4">
+  <!-- Top Products -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-trophy text-warning"></i> Top Selling Products
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div *ngFor="let p of topProducts; let i = index" class="d-flex align-items-center gap-3 px-4 py-3 border-bottom">
+          <div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+               style="width:30px;height:30px;font-size:12px"
+               [class]="i === 0 ? 'bg-warning' : i === 1 ? 'bg-secondary' : i === 2 ? 'bg-danger bg-opacity-75' : 'bg-light text-muted'">
+            {{ i + 1 }}
+          </div>
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="fw-semibold text-truncate" style="font-size:13px">{{ p.productName }}</div>
+            <small class="text-muted">{{ p.totalSold }} units sold</small>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold text-success" style="font-size:13px">৳{{ p.totalRevenue | number:'1.0-0' }}</div>
+          </div>
+        </div>
+        <div *ngIf="topProducts.length === 0" class="text-center py-4 text-muted small">No sales data</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Levels -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart text-primary"></i> Stock Levels Overview
+        </h6>
+      </div>
+      <div class="card-body p-0" style="max-height:400px;overflow-y:auto">
+        <div *ngFor="let s of stockLevels" class="px-4 py-3 border-bottom">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold" style="font-size:13px">{{ s.productName }}</span>
+            <span [class]="'badge rounded-pill ' + getStatusBadge(s.status)">{{ s.status }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:6px">
+              <div class="progress-bar"
+                   [class]="s.status === 'OUT_OF_STOCK' ? 'bg-danger' : s.status === 'LOW' ? 'bg-warning' : 'bg-success'"
+                   [style.width]="getStockPercent(s) + '%'"></div>
+            </div>
+            <small class="text-muted flex-shrink-0">{{ s.quantityInStock }} / {{ s.lowStockThreshold }}</small>
+          </div>
+        </div>
+        <div *ngIf="stockLevels.length === 0" class="text-center py-4 text-muted small">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>

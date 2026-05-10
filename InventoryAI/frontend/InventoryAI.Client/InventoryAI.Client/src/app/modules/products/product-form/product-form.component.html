@@ -1,0 +1,142 @@
+<!-- product-form.component.html -->
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a routerLink="/products" class="btn btn-sm btn-outline-secondary rounded-2">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <div>
+    <h5 class="fw-semibold mb-0">{{ isEditMode ? 'Edit Product' : 'Add Product' }}</h5>
+    <small class="text-muted">{{ isEditMode ? 'Update product details' : 'Add a new product to inventory' }}</small>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="text-center py-5">
+  <div class="spinner-border text-primary"></div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger py-2 px-3 small mb-4 rounded-3">
+  <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!isLoading">
+  <div class="row g-4">
+
+    <!-- Main Fields -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold">Product Details</h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Product Name <span class="text-danger">*</span></label>
+              <input class="form-control" formControlName="productName" placeholder="e.g. Wireless Mouse"
+                     [class.is-invalid]="form.get('productName')?.invalid && form.get('productName')?.touched">
+              <div class="invalid-feedback">Product name is required</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">SKU <span class="text-danger">*</span></label>
+              <input class="form-control" formControlName="sku" placeholder="e.g. ELEC-001"
+                     [class.is-invalid]="form.get('sku')?.invalid && form.get('sku')?.touched">
+              <div class="invalid-feedback">SKU is required</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold small">Description</label>
+              <textarea class="form-control" formControlName="description" rows="3"
+                        placeholder="Product description..."></textarea>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Category <span class="text-danger">*</span></label>
+              <select class="form-select" formControlName="categoryId"
+                      [class.is-invalid]="form.get('categoryId')?.invalid && form.get('categoryId')?.touched">
+                <option value="">-- Select Category --</option>
+                <option *ngFor="let c of categories" [value]="c.categoryId">{{ c.categoryName }}</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Low Stock Threshold</label>
+              <input class="form-control" type="number" min="1" formControlName="lowStockThreshold">
+              <div class="form-text">Alert when stock falls below this</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing & Stock -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold">Pricing & Stock</h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <label class="form-label fw-semibold small">Unit Price (৳) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">৳</span>
+                <input class="form-control" type="number" min="0" step="0.01" formControlName="unitPrice">
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label fw-semibold small">Cost Price (৳)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">৳</span>
+                <input class="form-control" type="number" min="0" step="0.01" formControlName="costPrice">
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label fw-semibold small">
+                {{ isEditMode ? 'Current Stock' : 'Initial Stock' }}
+              </label>
+              <input class="form-control" type="number" min="0" formControlName="quantityInStock">
+            </div>
+            <div class="col-12" *ngIf="form.get('unitPrice')?.value > 0 && form.get('costPrice')?.value > 0">
+              <div class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+                <i class="bi bi-graph-up me-2"></i>
+                Profit Margin:
+                <strong>
+                  {{ ((form.get('unitPrice')!.value - form.get('costPrice')!.value) / form.get('unitPrice')!.value * 100) | number:'1.1-1' }}%
+                </strong>
+                (৳{{ (form.get('unitPrice')!.value - form.get('costPrice')!.value) | number:'1.2-2' }} per unit)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold">Product Image</h6>
+        </div>
+        <div class="card-body p-4">
+          <!-- Preview -->
+          <div class="rounded-3 mb-3 overflow-hidden bg-light d-flex align-items-center justify-content-center"
+               style="height:200px">
+            <img *ngIf="imagePreview" [src]="imagePreview" class="img-fluid object-fit-contain" style="max-height:200px">
+            <div *ngIf="!imagePreview" class="text-center text-muted">
+              <i class="bi bi-image fs-1 d-block mb-2"></i>
+              <small>No image uploaded</small>
+            </div>
+          </div>
+          <label class="btn btn-outline-primary w-100 rounded-3" for="imageInput">
+            <i class="bi bi-upload me-2"></i> Upload Image
+          </label>
+          <input id="imageInput" type="file" accept="image/*" class="d-none" (change)="onFileChange($event)">
+          <small class="text-muted d-block text-center mt-2">JPG, PNG, WebP · Max 5MB</small>
+        </div>
+      </div>
+
+      <!-- Save / Cancel -->
+      <div class="mt-4 d-grid gap-2">
+        <button type="submit" class="btn btn-primary py-2 fw-semibold" [disabled]="form.invalid || isSaving">
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!isSaving" class="bi bi-check-circle me-2"></i>
+          {{ isSaving ? 'Saving...' : isEditMode ? 'Update Product' : 'Add Product' }}
+        </button>
+        <a routerLink="/products" class="btn btn-light py-2">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

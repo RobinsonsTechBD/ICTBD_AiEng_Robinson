@@ -1,0 +1,171 @@
+<!-- order-form.component.html -->
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a routerLink="/orders" class="btn btn-sm btn-outline-secondary rounded-2">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <div>
+    <h5 class="fw-semibold mb-0">New Order</h5>
+    <small class="text-muted">Create a new sales order</small>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-danger alert-dismissible py-2 px-3 small mb-4 rounded-3">
+  <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+  <button type="button" class="btn-close btn-sm" (click)="error=''"></button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row g-4">
+
+    <!-- Customer Info -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+            <i class="bi bi-person-circle text-primary"></i> Customer Information
+          </h6>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Customer Name <span class="text-danger">*</span></label>
+              <input class="form-control" type="text" placeholder="Enter customer name"
+                     formControlName="customerName"
+                     [class.is-invalid]="form.get('customerName')?.invalid && form.get('customerName')?.touched">
+              <div class="invalid-feedback">Customer name is required</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Phone Number</label>
+              <input class="form-control" type="text" placeholder="e.g. 01XXXXXXXXX"
+                     formControlName="customerPhone">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Discount (৳)</label>
+              <input class="form-control" type="number" min="0" formControlName="discount">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold small">Notes</label>
+              <input class="form-control" type="text" placeholder="Optional order notes"
+                     formControlName="notes">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+            <i class="bi bi-cart3 text-primary"></i> Order Items
+          </h6>
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-2" (click)="addItem()">
+            <i class="bi bi-plus-lg me-1"></i> Add Item
+          </button>
+        </div>
+        <div class="card-body p-4">
+          <!-- Header row -->
+          <div class="row g-2 mb-2 d-none d-md-flex">
+            <div class="col-md-5"><small class="text-muted fw-semibold">Product</small></div>
+            <div class="col-md-2"><small class="text-muted fw-semibold">Qty</small></div>
+            <div class="col-md-3"><small class="text-muted fw-semibold">Unit Price</small></div>
+            <div class="col-md-2"><small class="text-muted fw-semibold">Subtotal</small></div>
+          </div>
+
+          <div formArrayName="items">
+            <div *ngFor="let item of items.controls; let i = index" [formGroupName]="i"
+                 class="row g-2 align-items-center mb-3 pb-3"
+                 [class.border-bottom]="i < items.length - 1">
+
+              <!-- Product select -->
+              <div class="col-md-5">
+                <select class="form-select" formControlName="productId"
+                        (change)="onProductChange(i)"
+                        [class.is-invalid]="item.get('productId')?.invalid && item.get('productId')?.touched">
+                  <option value="">-- Select Product --</option>
+                  <option *ngFor="let p of products" [value]="p.productId">
+                    {{ p.productName }} (Stock: {{ p.quantityInStock }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- Quantity -->
+              <div class="col-md-2">
+                <input class="form-control" type="number" min="1" formControlName="quantity"
+                       [class.is-invalid]="item.get('quantity')?.invalid && item.get('quantity')?.touched">
+              </div>
+
+              <!-- Unit Price (readonly) -->
+              <div class="col-md-3">
+                <div class="input-group">
+                  <span class="input-group-text bg-light">৳</span>
+                  <input class="form-control bg-light" type="number" formControlName="unitPrice" readonly>
+                </div>
+              </div>
+
+              <!-- Subtotal -->
+              <div class="col-md-1 fw-semibold" style="font-size:14px">
+                ৳{{ getItemTotal(item) | number:'1.0-0' }}
+              </div>
+
+              <!-- Remove -->
+              <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-2"
+                        (click)="removeItem(i)" [disabled]="items.length === 1">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm position-sticky" style="top:80px">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+            <i class="bi bi-receipt text-primary"></i> Order Summary
+          </h6>
+        </div>
+        <div class="card-body p-4">
+          <!-- Items list -->
+          <div *ngFor="let item of items.controls; let i = index" class="d-flex justify-content-between mb-2">
+            <span class="text-muted small" style="max-width:60%">
+              {{ getProductName(item.get('productId')?.value) || 'Item ' + (i+1) }}
+              × {{ item.get('quantity')?.value }}
+            </span>
+            <span class="small fw-semibold">
+              ৳{{ getItemTotal(item) | number:'1.0-0' }}
+            </span>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Subtotal</span>
+            <span class="fw-semibold">৳{{ subtotal | number:'1.0-0' }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Discount</span>
+            <span class="text-danger">- ৳{{ form.get('discount')?.value || 0 | number:'1.0-0' }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between py-3 border-top">
+            <span class="fw-bold fs-6">Total</span>
+            <span class="fw-bold fs-5 text-primary">৳{{ total | number:'1.0-0' }}</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2 fw-semibold"
+                  [disabled]="form.invalid || isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!isLoading" class="bi bi-check-circle me-2"></i>
+            {{ isLoading ? 'Placing Order...' : 'Place Order' }}
+          </button>
+          <a routerLink="/orders" class="btn btn-light w-100 mt-2">Cancel</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</form>

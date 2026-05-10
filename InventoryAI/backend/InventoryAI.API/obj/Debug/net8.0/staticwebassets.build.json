@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "Hash": "VuErTTy6FaVKLnb8OqFLxe0M6FELSiVfO+/jPNE/uJY=",
+  "Source": "InventoryAI.API",
+  "BasePath": "_content/InventoryAI.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "InventoryAI.API\\wwwroot",
+      "Source": "InventoryAI.API",
+      "ContentRoot": "C:\\Users\\Robinson\\Desktop\\AIEngineering\\Exam_Robinson\\InventoryAI\\backend\\InventoryAI.API\\wwwroot\\",
+      "BasePath": "_content/InventoryAI.API",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}
