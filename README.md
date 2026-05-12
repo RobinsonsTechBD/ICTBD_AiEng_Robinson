@@ -118,13 +118,6 @@ SELECT * FROM Categories; -- Should show 5 categories
 
 ### 5.4 Update connection string (if needed)
 Edit `backend/InventoryAI.API/appsettings.json`:
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=InventoryAIDB;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
-- For SQL Auth: `Server=.;Database=InventoryAIDB;User Id=sa;Password=YourPass;TrustServerCertificate=True;`
-- For default local instance: `Server=localhost;Database=InventoryAIDB;...`
 
 ---
 
@@ -142,20 +135,7 @@ dotnet restore
 
 ### 6.3 Verify appsettings.json
 ```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=InventoryAIDB;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "Jwt": {
-    "Key": "InventoryAI_SuperSecretKey_2024_ChangeInProduction!",
-    "Issuer": "InventoryAI.API",
-    "Audience": "InventoryAI.Angular"
-  },
-  "Ollama": {
-    "BaseUrl": "http://localhost:11434",
-    "Model": "qwen3:0.6b"
-  }
-}
+
 ```
 
 ### 6.4 Create wwwroot folder for uploads
@@ -169,18 +149,6 @@ dotnet build
 ```
 
 ### 6.6 Update admin password hash
-The seed data has a placeholder hash. Update it:
-```bash
-# Run this one-time C# script or update manually in SQL:
-```
-```sql
--- In SSMS, run this to set password to "Admin@123":
-UPDATE Users 
-SET PasswordHash = '$2a$11$rBnxJWHCwi/NHsHfR9kK9eN8.OULVm3Xq0ZsF5YyTqKfL8JzjJm.K'
-WHERE Username = 'admin';
--- Note: This is a BCrypt hash of "Admin@123"
--- Or just register via API after first login workaround
-```
 
 **Easier alternative** — update the seed in `01_schema.sql` before running it:
 The hash `$2a$11$...` is pre-generated. For development, you can temporarily disable the password check in `AuthService.cs` and create the admin, then re-enable.
@@ -254,11 +222,7 @@ npm install
 
 ### 8.3 Verify environment.ts
 ```typescript
-// src/environments/environment.ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:5000/api'
-};
+
 ```
 
 ### 8.4 Install Angular CLI if not present
